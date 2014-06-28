@@ -1,0 +1,8 @@
+post_title:
+  require:
+    check: 1
+    error: キャッチコピーを入力して下さい
+created:
+  require:
+    check: 1
+    error: 投稿日を入力して下さい

@@ -1,0 +1,12 @@
+post_title:
+  require:
+    check: 1
+    error: タイトルを入力して下さい
+created:
+  require:
+    check: 1
+    error: 投稿日を入力して下さい
+category:
+  require:
+    check: 1
+    error: カテゴリーを選択して下さい
