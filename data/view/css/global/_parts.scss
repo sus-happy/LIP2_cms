@@ -278,9 +278,41 @@ table.table {
             }
         }
         .top th,
-        .top td {
+        .top td,
+        th.top,
+        td.top {
             vertical-align: top;
         }
+    }
+    .row-primary th,
+    .row-primary td,
+    .col-primary {
+        color: $cat-primary-text;
+        background: $cat-primary-back;
+    }
+    .row-danger th,
+    .row-danger td,
+    .col-danger {
+        color: $cat-danger-text;
+        background: $cat-danger-back;
+    }
+    .row-success th,
+    .row-success td,
+    .col-success {
+        color: $cat-success-text;
+        background: $cat-success-back;
+    }
+    .row-warning th,
+    .row-warning td,
+    .col-warning {
+        color: $cat-warning-text;
+        background: $cat-warning-back;
+    }
+    .row-disabled th,
+    .row-disabled td,
+    .col-disabled {
+        color: $cat-disabled-text;
+        background: $cat-disabled-back;
     }
 }
 .form_box table {

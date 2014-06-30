@@ -44,7 +44,10 @@ class Controller_Post extends Controller {
             'param'    => Request::get()
         ) );
 
-        $data['list'] = self::$_model->get_list( Request::get() );
+        $param = Request::get();
+        $param->limit  = static::$_per_page;
+        $param->offset = ( Pagenation::get_page()-1 ) * static::$_per_page;
+        $data['list'] = self::$_model->get_list( $param );
 
         if( $message )
             $data['message'] = static::$message[ $message ];
@@ -52,7 +55,7 @@ class Controller_Post extends Controller {
         View::show( sprintf( '%s/lists', static::$_preffix ), $data );
     }
 
-    public function add() {
+    public function add( $mode = NULL, $id = NULL ) {
         $data['nonce_key'] = sprintf( '%s_add', static::$_preffix );
         $data['label'] = '新規追加';
 
@@ -74,7 +77,8 @@ class Controller_Post extends Controller {
 
                 // トランザクションエンド
                 Database::complete_trans();
-                Url::redirect( sprintf( '%s/init/%d', static::$_preffix, self::MESSAGE_SUCCESS ) );
+                //Url::redirect( sprintf( '%s/init/%d', static::$_preffix, self::MESSAGE_SUCCESS ) );
+                Url::redirect( sprintf( '%s/edit/%d/%d', static::$_preffix, $post_id, self::MESSAGE_SUCCESS ) );
             }
 
             $data['post'] = Request::post();
@@ -82,9 +86,13 @@ class Controller_Post extends Controller {
                 $data['post']->created = strtotime( $data['post']->created );
 
         } else {
-            $model_data_class = sprintf( '%s_data_model', ucfirst( static::$_preffix ) );
-            $data['post'] = new $model_data_class();
-            $data['post']->created = time();
+            if( $mode === 'copy' && ! empty( $id ) ) {
+                $data['post'] = self::$_model->get_detail( $id );
+            } else {
+                $model_data_class = sprintf( '%s_data_model', ucfirst( static::$_preffix ) );
+                $data['post'] = new $model_data_class();
+                $data['post']->created = time();
+            }
         }
 
         $data['nonce'] = self::make_nonce( $data['nonce_key'] );
@@ -92,7 +100,7 @@ class Controller_Post extends Controller {
         View::show( sprintf( '%s/form', static::$_preffix ), $data );
     }
 
-    public function edit( $id ) {
+    public function edit( $id, $message = NULL ) {
         $data['nonce_key'] = sprintf( '%s_edit', static::$_preffix );
         $data['label'] = '編集';
 
@@ -122,8 +130,9 @@ class Controller_Post extends Controller {
                     // 対象IDをセッションから削除
                     Session::remove_param( $data['nonce_key'].'_id' );
 
-                    // 一覧にリダイレクト
-                    Url::redirect( sprintf( '%s/init/%d', static::$_preffix, self::MESSAGE_SUCCESS ) );
+                    // リダイレクト
+                    // Url::redirect( sprintf( '%s/init/%d', static::$_preffix, self::MESSAGE_SUCCESS ) );
+                    Url::redirect( sprintf( '%s/edit/%d/%d', static::$_preffix, $target_id, self::MESSAGE_SUCCESS ) );
                 }
 
                 $data['post'] = Request::post();
@@ -140,13 +149,17 @@ class Controller_Post extends Controller {
             $data['post'] = self::$_model->get_detail( $id );
         }
 
-        // データがからの場合は一覧にリダイレクト
+        // データが空の場合は一覧にリダイレクト
         if(! $data['post'] )
             Url::redirect( sprintf( '%s/init/%d', static::$_preffix, self::MESSAGE_NOTFOUND ) );
 
         // nonceキーを作成
         Session::set_param( $data['nonce_key'].'_id', $id );
         $data['nonce'] = self::make_nonce( $data['nonce_key'] );
+
+        if( $message )
+            $data['message'] = static::$message[ $message ];
+
         View::show( sprintf( '%s/form', static::$_preffix ), $data );
 
     }

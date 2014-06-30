@@ -67,25 +67,13 @@ abstract class Model extends Object {
 
             Database::bind( $sql_key, $word );
         }
-    public static function add_where( &$sql, $key, $word, $diff = '=' ) {
+    public static function add_where( &$sql, $key, $word, $diff = '=', $type = PDO::PARAM_STR ) {
         $sql_key = self::make_where_key( $key, 'add_where' );
-
-        if( preg_match( '/WHERE/', $sql ) )
-            $sql .= sprintf( ' AND `%s` %s :%s', $key, $diff, $sql_key );
-        else
-            $sql .= sprintf( ' WHERE `%s` %s :%s', $key, $diff, $sql_key );
-
-        Database::bind( $sql_key, $word );
+        self::make_where_sql( $sql, $key, $word, $diff, $type, 'AND', $sql_key );
     }
-        public static function add_or_where( &$sql, $key, $word, $diff = '=' ) {
+        public static function add_or_where( &$sql, $key, $word, $diff = '=', $type = PDO::PARAM_STR ) {
             $sql_key = self::make_where_key( $key, 'add_or_where' );
-
-            if( preg_match( '/WHERE/', $sql ) )
-                $sql .= sprintf( ' OR `%s` %s :%s', $key, $diff, $sql_key );
-            else
-                $sql .= sprintf( ' WHERE `%s` %s :%s', $key, $diff, $sql_key );
-
-            Database::bind( $sql_key, $word );
+            self::make_where_sql( $sql, $key, $word, $diff, $type, 'OR', $sql_key );
         }
 
         private static function make_where_key( &$key, $label ) {
@@ -102,6 +90,34 @@ abstract class Model extends Object {
 
             return $sql_key;
         }
+        private static function make_where_sql( &$sql, $key, $word, $diff, $type, $mode, $sql_key ) {
+            if( is_array( $word ) || is_object( $word ) || $diff == 'IN' ) {
+                $index = 0;
+                $keis = array();
+                if(! is_array( $word ) && ! is_object( $word ) )
+                    $word = array( $word );
+
+                foreach( $word as $w ) {
+                    $sql_key_child = sprintf( '%s_%d', $sql_key, $index );
+                    $keis[] = ':'.$sql_key_child;
+
+                    Database::bind( $sql_key_child, $w, $type );
+                    $index ++;
+                }
+
+                if( preg_match( '/WHERE/', $sql ) )
+                    $sql .= sprintf( ' %s `%s` IN ( %s )', $mode, $key, implode( ',', $keis ) );
+                else
+                    $sql .= sprintf( ' WHERE `%s` IN ( %s )', $key, implode( ',', $keis ) );
+            } else {
+                if( preg_match( '/WHERE/', $sql ) )
+                    $sql .= sprintf( ' %s `%s` %s :%s', $mode, $key, $diff, $sql_key );
+                else
+                    $sql .= sprintf( ' WHERE `%s` %s :%s', $key, $diff, $sql_key );
+
+                Database::bind( $sql_key, $word, $type );
+            }
+        }
 
     /**
      * クエリ分にORDER句を追加する
@@ -112,10 +128,17 @@ abstract class Model extends Object {
      * @param integer $sort 方向
      */
     public static function add_order_by( &$sql, $order, $sort = 'ASC' ) {
-        if( preg_match( '/ORDER BY/', $sql ) )
-            $sql .= sprintf( ', `%s` %s', $order, $sort );
-        else
-            $sql .= sprintf( ' ORDER BY `%s` %s', $order, $sort );
+        if( is_array( $order ) ) {
+            if( preg_match( '/ORDER BY/', $sql ) )
+                $sql .= sprintf( ', `%s`.`%s` %s', $order[0], $order[1], $sort );
+            else
+                $sql .= sprintf( ' ORDER BY `%s`.`%s` %s', $order[0], $order[1], $sort );
+        } else {
+            if( preg_match( '/ORDER BY/', $sql ) )
+                $sql .= sprintf( ', `%s` %s', $order, $sort );
+            else
+                $sql .= sprintf( ' ORDER BY `%s` %s', $order, $sort );
+        }
     }
 
     /**
@@ -149,6 +172,7 @@ abstract class Data_model Extends Object {
     const
         BOOLEAN  = 'boolean',
         INTEGER  = 'integer',
+        IMAGE    = 'image',
         DOUBLE   = 'double',
         FLOAT    = 'float',
         STRING   = 'string',
@@ -196,12 +220,15 @@ abstract class Data_model Extends Object {
             case self::BOOLEAN:
                 return $this->_data[$key] = (bool)$val;
             case self::INTEGER:
+            case self::IMAGE:
                 return $this->_data[$key] = (int)$val;
             case self::DOUBLE:
                 return $this->_data[$key] = (double)$val;
             case self::XARRAY:
-                if(! is_array( $val ) && ! is_object( $val ) )
-                    $val = explode( '||', $val );
+                if(! is_array( $val ) && ! is_object( $val ) ) {
+                    preg_match( '/^\|\|(.*)\|\|$/', $val, $match );
+                    $val = explode( '||', $match[1] );
+                }
                 return $this->_data[$key] = (array)$val;
             case self::STRING:
             default:

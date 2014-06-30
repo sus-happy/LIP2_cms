@@ -61,15 +61,18 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th>表示/非表示</th>
                         <th>投稿日</th>
                         <th>画像</th>
                         <th>キャッチコピー</th>
+                        <th>カテゴリー</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach( $list as $post ): ?>
-                    <tr>
+                    <tr<?php _e( $post->visible ? '' : ' class="row-disabled"' ) ?>>
+                        <td><?php _e( $post->visible ? '表示' : '非表示' ) ?></td>
                         <td><?php _e( date( 'Y/m/d', $post->created ) ) ?></td>
                         <td>
                             <?php if( $post->main_image ): ?>
@@ -78,6 +81,10 @@
                         </td>
                         <td><?php _e( $post->post_title ) ?></td>
                         <td>
+                            <?php $cats = array(); foreach( $post->category as $cat ) { $cats[] = Project_model::get_category_label( $cat ); } _e( $cats, '、' ) ?>
+                        </td>
+                        <td>
+                            <a href="<?php _e( Url::site_url( sprintf( 'project/add/copy/%d', $post->post_id ) ) ) ?>" class="btn btn-small btn-default">複製</a>
                             <a href="<?php _e( Url::site_url( sprintf( 'project/edit/%d', $post->post_id ) ) ) ?>" class="btn btn-small btn-default">編集</a>
                             <a href="<?php _e( Url::site_url( sprintf( 'project/delete/%d', $post->post_id ) ) ) ?>" class="btn btn-small btn-danger">削除</a>
                         </td>

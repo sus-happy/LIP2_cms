@@ -401,8 +401,35 @@ table.table {
     table.table tbody th dl, table.table tbody td dl {
       margin-bottom: 0; }
   table.table tbody .top th,
-  table.table tbody .top td {
+  table.table tbody .top td,
+  table.table tbody th.top,
+  table.table tbody td.top {
     vertical-align: top; }
+  table.table .row-primary th,
+  table.table .row-primary td,
+  table.table .col-primary {
+    color: white;
+    background: #428bca; }
+  table.table .row-danger th,
+  table.table .row-danger td,
+  table.table .col-danger {
+    color: white;
+    background: #d9534f; }
+  table.table .row-success th,
+  table.table .row-success td,
+  table.table .col-success {
+    color: white;
+    background: #5cb85c; }
+  table.table .row-warning th,
+  table.table .row-warning td,
+  table.table .col-warning {
+    color: white;
+    background: #f0ad4e; }
+  table.table .row-disabled th,
+  table.table .row-disabled td,
+  table.table .col-disabled {
+    color: white;
+    background: #999999; }
 
 .form_box table tbody th {
   width: 8em;
